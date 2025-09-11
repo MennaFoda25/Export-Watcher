@@ -1,9 +1,13 @@
 import initDB from "../db.js";
+import asyncHandler from "express-async-handler"
+import ApiError from "./apiError.js";
 
 // Core logic: updates DB
-export const runExportJob = async () => {
-    try{
+export const runExportJob = asyncHandler(async () => {
+    
   const db = await initDB();
+
+  if(!db) throw new ApiError('Database is not connected', 500)
 
   const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
@@ -16,23 +20,21 @@ export const runExportJob = async () => {
     [thirtyMinutesAgo]
   );
 
+  if(!result){
+    throw new ApiError("Job did not update any records",500)
+  }
+
   console.log(`Job ran: ${result.changes} document(s) corrected `);
    return { corrected: result.changes, ids: [] };
-    }catch(err){
-          console.error("Job error:", err);
-    }
-};
+    
+});
 
 // Express route handler (for Postman testing)
-export const checkExportJob = async (req, res, next) => {
-  try {
+export const checkExportJob = asyncHandler(async (req, res, next) => {
     const result = await runExportJob();
     res.json({
       message: "Job executed successfully",
       corrected: result.changes,
     });
-  } catch (err) {
-   console.error("Job error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
+
+});

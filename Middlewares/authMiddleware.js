@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import ApiError from "../utils/apiError.js";
 import initDB from '../db.js'
-import { getUserById } from "../models/userModel.js"; // <-- you’ll implement this
 
 // Protect routes (authentication)
 export const protect = asyncHandler(async (req, res, next) => {
@@ -24,14 +23,14 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 
   // 2) Verify token
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  } catch (err) {
-    return next(new ApiError("Not authorized, token failed", 401));
-  }
-  console.log("Decoded token:", decoded);
+  let decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
+if(!decoded){
+    return next(new ApiError("Not authorized, token failed", 401));
+
+}
+
+  console.log("Decoded token:", decoded);
 
   // 3) Check if user exists in SQLite DB
  const currentUser = await db.get(
@@ -46,22 +45,8 @@ console.log("Current user from DB:", currentUser);
     );
   }
 
-  // (Optional) If you later add passwordChangedAt support in DB
-  // if (currentUser.passwordChangedAt && decoded.iat < currentUser.passwordChangedAt) {
-  //   return next(new ApiError("Password was changed, please login again", 401));
-  // }
-
   req.user = currentUser; // attach user to request
   next();
 });
 
-// Authorization (roles)
-export const allowedTo = (...roles) =>
-  asyncHandler(async (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return next(
-        new ApiError("You are not allowed to access this route", 403)
-      );
-    }
-    next();
-  });
+

@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler'
 import bcrypt from 'bcryptjs'
 import initDB from '../db.js'
 import {createToken} from '../utils/createToken.js'
+import ApiError from '../utils/apiError.js'
 
 export const registerUser = asyncHandler(async(req,res,next)=>{
     const db = await initDB()
@@ -15,7 +16,7 @@ export const registerUser = asyncHandler(async(req,res,next)=>{
     res.status(201).json({message: "User registered"})
 })
 
-export const loginUser = asyncHandler(async (req, res) => {
+export const loginUser = asyncHandler(async (req, res,next) => {
   const db = await initDB();
   const { username, password } = req.body;
 
@@ -28,8 +29,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       token: createToken(user.id),
     });
   } else {
-    res.status(401);
-    throw new Error("Invalid credentials");
+    return next(new ApiError('Invalid credintials',401))
   }
 });
 

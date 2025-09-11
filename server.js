@@ -14,7 +14,6 @@ import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config({path:'config.env'})
 
-await initDB()
 const app = express();
 app.use(express.json())
 
@@ -22,6 +21,9 @@ if(process.env.NODE_ENV === 'development'){
     app.use(morgan('dev'))
     console.log(`mode: ${process.env.NODE_ENV}`)
 }
+
+await initDB()
+
 
 app.use('/api/documents', documentRoutes);
 app.use("/api/auth", authRoutes);
